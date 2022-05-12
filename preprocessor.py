@@ -27,3 +27,12 @@ def clean_etc_reg_ex(title):
     title = re.sub(r"\s+$", "", title)  # remove space from the end
     title = re.sub("[一-龥]", "", title)
     return title
+
+
+def slice_from_behind(text, num_of_chars):
+    return text[-num_of_chars:]
+
+def preprocess(text):
+    text = clean_etc_reg_ex(text)
+    text = mecab_tokenize(text)
+    return slice_from_behind(text, num_of_chars=500)

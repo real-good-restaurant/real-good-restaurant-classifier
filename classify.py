@@ -8,17 +8,9 @@ from torchtext import data
 
 from transformers import BertTokenizerFast
 from transformers import BertForSequenceClassification, AlbertForSequenceClassification
-
-class Config():
-
-    def __init__(self, model_fn, gpu_id, batch_size, lines):
-        self.model_fn = model_fn
-        self.gpu_id = gpu_id
-        self.batch_size = batch_size
-        self.lines = lines
     
 
-def main(config: Config) -> list:
+def main(config) -> list:
     # device = 'cuda' if torch.cuda.is_available() else 'cpu'
     saved_data = torch.load(
         config.model_fn,
@@ -75,6 +67,6 @@ def main(config: Config) -> list:
 
         result = []
         for i, line in enumerate(lines):
-            row = [float(probs[i][0]), index_to_label[int(indice[i[0]])], line]
+            row = [float(probs[i][0]), index_to_label[int(indice[i][0])], line]
             result.append(row)
         return result
