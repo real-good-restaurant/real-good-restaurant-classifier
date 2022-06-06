@@ -1,16 +1,11 @@
-import sys
-import argparse
-
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from torchtext import data
 
 from transformers import BertTokenizerFast
 from transformers import BertForSequenceClassification, AlbertForSequenceClassification
     
 
-def main(config) -> list:
+def classify(config) -> list:
     # device = 'cuda' if torch.cuda.is_available() else 'cpu'
     saved_data = torch.load(
         config.model_fn,

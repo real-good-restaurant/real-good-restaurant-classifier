@@ -1,32 +1,32 @@
-from flask import Flask, jsonify, request
-
+from fastapi import FastAPI
+from typing import List
 from config import Config
-from classify import main
+from classifier import classify
+from models.blogText import BlogText
 from preprocessor import preprocess
 
-app = Flask(__name__)
+app = FastAPI()
 
 
-@app.route("/predict", methods=["POST"])
-def predict():
-    """블로그 텍스트를 받으면 분류 결과를 return"""
-    if request.method == 'POST':
-        data = request.get_json()
-        lines = []
-        for json in data:
-            text = json['text']
-            text = preprocess(text)
-            lines.append(text)
-        print(lines)
-        config = Config("./models/bert_clean.tok.slice.pth", -1, 8, lines)
-        result = main(config)
-        result_list = []
-        for i in range(len(lines)):
-            r = result[i]
-            tmp = {}
-            tmp['id'] = data[i]['id']
-            tmp['probability'] = r[0]
-            tmp['ad'] = r[1]
-            tmp['text'] = r[2]
-            result_list.append(tmp)
-        return jsonify(result_list)
+@app.post("/predict")
+async def classify_blog_text(blog_text_list: List[BlogText]):
+    """
+        네이버 블로그 맛집 리뷰 텍스트의 광고 여부를 predict
+    """
+    blog_text_list = sorted(blog_text_list, key=lambda blog_text: blog_text.id)
+    lines_for_predict = []
+    for blog_text in blog_text_list:
+        lines_for_predict.append(preprocess(blog_text.text))
+    config = Config(model_fn="./trained_model/bert_clean.tok.slice.pth", gpu_id=-1, batch_size=8,
+                    lines=lines_for_predict)
+    classified_lines = classify(config)
+    classification_result = []
+    for i, classified_line in enumerate(classified_lines):
+        blog_text = BlogText(
+            id=blog_text_list[i].id,
+            text=classified_line[2]
+        )
+        blog_text.probability = classified_line[0]
+        blog_text.ad = classified_line[1]
+        classification_result.append(blog_text)
+    return classification_result
